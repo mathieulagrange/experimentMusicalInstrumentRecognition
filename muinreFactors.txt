@@ -1,0 +1,10 @@
+dataset === {'iowa', 'rwc', 'solosDb'} 
+features === {'mel', 'mfcc'}
+textureWindow === 10
+sampling =2:== [1 10 20 50 100]
+gamma =2:== [0 .25 .5 1 2 4 8 16 25 32 40 49]
+shrink =2:== [0 1]
+test =3:== {'train', 'test'}
+votingWindow =4== [0 1 6]
+votingArea =4=1/[1 2]= {'note', 'attack', 'sustain'}
+attackDuration =4=9/[2 3]=  [1 2 5 10 20]
