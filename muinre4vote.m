@@ -11,7 +11,7 @@ function [config, store, obs] = muinre4vote(config, setting, data)
 % Date: 04-Jun-2015
 
 % Set behavior for debug mode
-if nargin==0, musicalInstrumentRecognition('do', 4, 'mask', {0 2 1 2 1 1}); return; else store=[]; obs=[]; end
+if nargin==0, musicalInstrumentRecognition('do', 4, 'mask', {1 2 1 5 1 1 1 3 [3] 1}); return; else store=[]; obs=[]; end
 
 switch setting.votingWindow
     case 1 % no integration
@@ -23,17 +23,19 @@ switch setting.votingWindow
             instrument = data.instrument(data.file==files(k));
             vote = data.prediction(data.file==files(k));
             
-            attackTime = ceil(length(instrument)*setting.attackDuration/100);
+            attackTime = ceil(length(instrument)*setting.attackDuration/setting.votingWindow/100)*setting.votingWindow;
             
-            switch setting.votingArea
-                case 'attack'
-                    instrument = instrument(1:attackTime);
-                    vote = vote(1:attackTime);
-                case 'sustain'
-                    instrument = instrument(round(((end-attackTime):(end+attackTime))/2));
-                    vote = vote(round(((end-attackTime):(end+attackTime))/2));
+            if setting.votingWindow
+                switch setting.votingArea
+                    case 'attack'
+                        instrument = instrument(1:min(attackTime, length(instrument)));
+                        vote = vote(1:min(attackTime, length(vote)));
+                    case 'sustain'
+                        interval = max(1, round(length(vote)/2-attackTime/2)):min(length(vote), (length(vote)/2+attackTime/2));
+                        instrument = instrument(interval);
+                        vote = vote(interval);
+                end
             end
-            
             if   ~setting.votingWindow % integration per file
                 nbVotes = 1;
                 windowSize = length(instrument);
@@ -41,6 +43,7 @@ switch setting.votingWindow
                 windowSize = setting.votingWindow;
                 nbVotes = floor(length(instrument)/windowSize);
             end
+            nbVote(k) = nbVotes;
             for m=1:nbVotes
                 vi = instrument(1+(m-1)*windowSize:m*windowSize);
                 vv= vote(1+(m-1)*windowSize:m*windowSize);
@@ -61,3 +64,5 @@ end
 
 obs.cardinality = length(accuracy);
 obs.accuracy = accuracy;
+obs.nbFiles = length(files);
+obs.nbVote = nbVote;
